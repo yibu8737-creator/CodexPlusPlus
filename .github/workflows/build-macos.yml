@@ -28,19 +28,6 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - name: Install manager frontend
-        working-directory: apps/codex-plus-plus-manager
-        run: npm install --package-lock=false
-
-      - name: Build manager frontend
-        working-directory: apps/codex-plus-plus-manager
-        run: npm run vite:build
-
       - name: Build binaries
         run: cargo build --release --target ${{ matrix.target }}
 
@@ -80,12 +67,6 @@ jobs:
 
             <key>CFBundleVersion</key>
             <string>1.1.7</string>
-
-            <key>CFBundleShortVersionString</key>
-            <string>1.1.7</string>
-
-            <key>LSMinimumSystemVersion</key>
-            <string>12.0</string>
           </dict>
           </plist>
           EOF
