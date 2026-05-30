@@ -15,9 +15,10 @@ jobs:
           - target: aarch64-apple-darwin
             arch: AppleSilicon
           - target: x86_64-apple-darwin
-            arch: Intel Mac
+            arch: IntelMac
 
     runs-on: macos-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,11 +33,11 @@ jobs:
         with:
           node-version: "22"
 
-      - name: Install frontend dependencies
+      - name: Install manager frontend
         working-directory: apps/codex-plus-manager
         run: npm install --package-lock=false
 
-      - name: Build frontend
+      - name: Build manager frontend
         working-directory: apps/codex-plus-manager
         run: npm run vite:build
 
@@ -45,16 +46,33 @@ jobs:
 
       - name: Package app bundle
         run: |
-          mkdir -p dist/macos
+          mkdir -p dist/macos/codex-plus-plus.app/Contents/MacOS
+          mkdir -p dist/macos/codex-plus-plus.app/Contents/Resources
+
           if [ -f "target/${{ matrix.target }}/release/codex-plus-plus" ]; then
-            cp "target/${{ matrix.target }}/release/codex-plus-plus" "dist/macos/"
+            cp "target/${{ matrix.target }}/release/codex-plus-plus" \
+               "dist/macos/codex-plus-plus.app/Contents/MacOS/"
           fi
-          if [ -f "target/${{ matrix.target }}/release/codex-plus-plus-manager" ]; then
-            cp "target/${{ matrix.target }}/release/codex-plus-plus-manager" "dist/macos/"
-          fi
-          if [ -f "target/${{ matrix.target }}/release/codex-plus-plus.app" ]; then
-            cp -r "target/${{ matrix.target }}/release/codex-plus-plus.app" "dist/macos/"
-          fi
+
+          cat > dist/macos/codex-plus-plus.app/Contents/Info.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+          "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>CFBundleExecutable</key>
+            <string>codex-plus-plus</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.codexplusplus.app</string>
+            <key>CFBundleName</key>
+            <string>Codex++</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+            <key>CFBundleVersion</key>
+            <string>1.1.7</string>
+          </dict>
+          </plist>
+          EOF
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -66,17 +84,17 @@ jobs:
   create-release:
     needs: build-macos
     runs-on: ubuntu-latest
+
     steps:
-      - name: Download all artifacts
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
 
-      - name: Create Release
+      - name: Create release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: macos-build
           name: macOS Build
           draft: true
-          files: |
-            artifacts/**/*
+          files: artifacts/**/*
