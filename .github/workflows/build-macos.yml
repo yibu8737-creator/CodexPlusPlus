@@ -49,20 +49,14 @@ jobs:
           mkdir -p dist/macos/codex-plus-plus.app/Contents/MacOS
           mkdir -p dist/macos/codex-plus-plus.app/Contents/Resources
 
-          # 主程序
           if [ -f "target/${{ matrix.target }}/release/codex-plus-plus" ]; then
             cp "target/${{ matrix.target }}/release/codex-plus-plus" \
                "dist/macos/codex-plus-plus.app/Contents/MacOS/"
-            chmod +x \
-               "dist/macos/codex-plus-plus.app/Contents/MacOS/codex-plus-plus"
           fi
 
-          # Manager（恢复原来第二程序）
           if [ -f "target/${{ matrix.target }}/release/codex-plus-plus-manager" ]; then
             cp "target/${{ matrix.target }}/release/codex-plus-plus-manager" \
                "dist/macos/codex-plus-plus.app/Contents/MacOS/"
-            chmod +x \
-               "dist/macos/codex-plus-plus.app/Contents/MacOS/codex-plus-plus-manager"
           fi
 
           cat > dist/macos/codex-plus-plus.app/Contents/Info.plist <<EOF
@@ -84,6 +78,16 @@ jobs:
           </dict>
           </plist>
           EOF
+
+          # 原版兼容启动入口（给管理界面用）
+          mkdir -p dist/macos/Codex++.app/Contents/MacOS
+
+          cat > dist/macos/Codex++.app/Contents/MacOS/CodexPlusPlus <<EOF
+          #!/bin/bash
+          open -a Codex
+          EOF
+
+          chmod +x dist/macos/Codex++.app/Contents/MacOS/CodexPlusPlus
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
