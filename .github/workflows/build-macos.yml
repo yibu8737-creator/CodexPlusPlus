@@ -28,13 +28,25 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install frontend deps
+        working-directory: apps/codex-plus-manager
+        run: npm install
+
+      - name: Build frontend
+        working-directory: apps/codex-plus-manager
+        run: npm run build
+
       - name: Build binaries
         run: cargo build --release --target ${{ matrix.target }}
 
       - name: Package app bundle
         run: |
           mkdir -p dist/macos/codex-plus-plus.app/Contents/MacOS
-          mkdir -p dist/macos/codex-plus-plus.app/Contents/Resources
 
           cp target/${{ matrix.target }}/release/codex-plus-plus \
             dist/macos/codex-plus-plus.app/Contents/MacOS/
@@ -52,21 +64,12 @@ jobs:
           <dict>
             <key>CFBundleExecutable</key>
             <string>codex-plus-plus-manager</string>
-
             <key>CFBundleIdentifier</key>
             <string>com.codexplusplus.manager</string>
-
             <key>CFBundleName</key>
             <string>Codex++</string>
-
-            <key>CFBundleDisplayName</key>
-            <string>Codex++</string>
-
             <key>CFBundlePackageType</key>
             <string>APPL</string>
-
-            <key>CFBundleVersion</key>
-            <string>1.1.7</string>
           </dict>
           </plist>
           EOF
@@ -76,23 +79,3 @@ jobs:
         with:
           name: macos-${{ matrix.arch }}-binaries
           path: dist/macos/
-          retention-days: 7
-
-  create-release:
-    needs: build-macos
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      - name: Create release
-        uses: softprops/action-gh-release@v2
-        if: always()
-        with:
-          tag_name: macos-build-${{ github.run_number }}
-          name: macOS Build
-          draft: true
-          files: artifacts/**/*
