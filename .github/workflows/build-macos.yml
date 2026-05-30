@@ -93,8 +93,9 @@ jobs:
 
       - name: Create release
         uses: softprops/action-gh-release@v2
+        if: always()
         with:
-          tag_name: macos-build
+          tag_name: macos-build-${{ github.run_number }}
           name: macOS Build
           draft: true
           files: artifacts/**/*
